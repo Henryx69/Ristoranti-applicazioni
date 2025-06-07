@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Mia Guida Ristoranti by Enrico Sarri</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .restaurant-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .restaurant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .restaurant-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .restaurant-rating {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .restaurant-location {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .restaurant-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #495057;
+        }
+
+        .restaurant-notes {
+            color: #666;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .search-filters {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .filter-row select {
+            flex: 1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-results h3 {
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ La Mia Guida Ristoranti</h1>
+            <p>I tuoi ristoranti preferiti sempre a portata di mano</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('add')">Aggiungi</button>
+            <button class="tab" onclick="showTab('search')">Cerca</button>
+        </div>
+
+        <div class="content">
+            <!-- TAB AGGIUNGI RISTORANTE -->
+            <div id="addTab" class="tab-content">
+                <form id="restaurantForm">
+                    <div class="form-group">
+                        <label for="name">Nome Ristorante *</label>
+                        <input type="text" id="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regione">Regione *</label>
+                        <select id="regione" required>
+                            <option value="">Seleziona regione...</option>
+                            <option value="Abruzzo">Abruzzo</option>
+                            <option value="Basilicata">Basilicata</option>
+                            <option value="Calabria">Calabria</option>
+                            <option value="Campania">Campania</option>
+                            <option value="Emilia-Romagna">Emilia-Romagna</option>
+                            <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+                            <option value="Lazio">Lazio</option>
+                            <option value="Liguria">Liguria</option>
+                            <option value="Lombardia">Lombardia</option>
+                            <option value="Marche">Marche</option>
+                            <option value="Molise">Molise</option>
+                            <option value="Piemonte">Piemonte</option>
+                            <option value="Puglia">Puglia</option>
+                            <option value="Sardegna">Sardegna</option>
+                            <option value="Sicilia">Sicilia</option>
+                            <option value="Toscana">Toscana</option>
+                            <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+                            <option value="Umbria">Umbria</option>
+                            <option value="Valle d'Aosta">Valle d'Aosta</option>
+                            <option value="Veneto">Veneto</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="citta">Città</label>
+                        <input type="text" id="citta">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono">Telefono</label>
+                        <input type="tel" id="telefono" placeholder="+39 123 456 7890">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rating">Valutazione (1-5 stelle)</label>
+                        <select id="rating">
+                            <option value="">Seleziona...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ (5 stelle)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 stelle)</option>
+                            <option value="3">⭐⭐⭐ (3 stelle)</option>
+                            <option value="2">⭐⭐ (2 stelle)</option>
+                            <option value="1">⭐ (1 stella)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ambiente e Posizione</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="mare" value="Sul Mare">
+                                <label for="mare">🌊 Sul Mare</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lago" value="Sul Lago">
+                                <label for="lago">🏞️ Sul Lago</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="montagna" value="In Montagna">
+                                <label for="montagna">🏔️ In Montagna</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="campagna" value="In Campagna">
+                                <label for="campagna">🌾 In Campagna</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipologia Locale</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="agriturismo" value="Agriturismo">
+                                <label for="agriturismo">🚜 Agriturismo</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rustico" value="Rustico con Caminetto">
+                                <label for="rustico">🔥 Rustico/Caminetto</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="elegante" value="Elegante">
+                                <label for="elegante">✨ Elegante</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="moderno" value="Moderno">
+                                <label for="moderno">🏙️ Moderno</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="source">Fonte</label>
+                        <select id="source">
+                            <option value="">Seleziona...</option>
+                            <option value="Provato Personalmente">🍴 Provato Personalmente</option>
+                            <option value="TripAdvisor">📱 Consigliato da TripAdvisor</option>
+                            <option value="Consiglio di Amici">👥 Consiglio di Amici</option>
+                            <option value="Altro">📝 Altro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Note Personali</label>
+                        <textarea id="notes" rows="3" placeholder="Aggiungi le tue impressioni, piatti consigliati, ecc..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn">Aggiungi Ristorante</button>
+                </form>
+            </div>
+
+            <!-- TAB CERCA RISTORANTI -->
+            <div id="searchTab" class="tab-content hidden">
+                <div class="search-filters">
+                    <div class="filter-row">
+                        <select id="filterRegione">
+                            <option value="">Tutte le regioni</option>
+                            <option value="Abruzzo">Abruzzo</option>
+                            <option value="Basilicata">Basilicata</option>
+                            <option value="Calabria">Calabria</option>
+                            <option value="Campania">Campania</option>
+                            <option value="Emilia-Romagna">Emilia-Romagna</option>
+                            <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+                            <option value="Lazio">Lazio</option>
+                            <option value="Liguria">Liguria</option>
+                            <option value="Lombardia">Lombardia</option>
+                            <option value="Marche">Marche</option>
+                            <option value="Molise">Molise</option>
+                            <option value="Piemonte">Piemonte</option>
+                            <option value="Puglia">Puglia</option>
+                            <option value="Sardegna">Sardegna</option>
+                            <option value="Sicilia">Sicilia</option>
+                            <option value="Toscana">Toscana</option>
+                            <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+                            <option value="Umbria">Umbria</option>
+                            <option value="Valle d'Aosta">Valle d'Aosta</option>
+                            <option value="Veneto">Veneto</option>
+                        </select>
+                        <select id="filterRating">
+                            <option value="">Tutte le valutazioni</option>
+                            <option value="5">⭐⭐⭐⭐⭐</option>
+                            <option value="4">⭐⭐⭐⭐</option>
+                            <option value="3">⭐⭐⭐</option>
+                            <option value="2">⭐⭐</option>
+                            <option value="1">⭐</option>
+                        </select>
+                    </div>
+                    <div class="filter-row">
+                        <select id="filterAmbiente">
+                            <option value="">Tutti gli ambienti</option>
+                            <option value="Sul Mare">🌊 Sul Mare</option>
+                            <option value="Sul Lago">🏞️ Sul Lago</option>
+                            <option value="In Montagna">🏔️ In Montagna</option>
+                            <option value="In Campagna">🌾 In Campagna</option>
+                        </select>
+                        <select id="filterTipologia">
+                            <option value="">Tutte le tipologie</option>
+                            <option value="Agriturismo">🚜 Agriturismo</option>
+                            <option value="Rustico con Caminetto">🔥 Rustico/Caminetto</option>
+                            <option value="Elegante">✨ Elegante</option>
+                            <option value="Moderno">🏙️ Moderno</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="restaurantsList">
+                    <div class="no-results">
+                        <h3>Nessun ristorante trovato</h3>
+                        <p>Inizia aggiungendo i tuoi ristoranti preferiti!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let restaurants = [];
+        let editingId = null;
+
+        // Carica dati salvati
+        function loadRestaurants() {
+            const saved = window.localStorage?.getItem('myRestaurants');
+            if (saved) {
+                try {
+                    restaurants = JSON.parse(saved);
+                } catch (e) {
+                    console.log('Errore nel caricamento dei dati salvati');
+                    restaurants = getExampleRestaurants();
+                }
+            } else {
+                restaurants = getExampleRestaurants();
+            }
+        }
+
+        // Salva dati
+        function saveRestaurants() {
+            try {
+                if (window.localStorage) {
+                    window.localStorage.setItem('myRestaurants', JSON.stringify(restaurants));
+                }
+            } catch (e) {
+                console.log('Impossibile salvare i dati');
+            }
+        }
+
+        // Ristoranti di esempio
+        function getExampleRestaurants() {
+            return [
+                {
+                    id: 1,
+                    name: "Osteria del Mare",
+                    regione: "Liguria",
+                    citta: "Cinque Terre",
+                    telefono: "+39 0187 920000",
+                    rating: "5",
+                    source: "Provato Personalmente",
+                    notes: "Vista mozzafiato, pesce freschissimo, servizio eccellente",
+                    ambiente: ["Sul Mare"],
+                    tipologia: ["Elegante"],
+                    dateAdded: "15/05/2024"
+                },
+                {
+                    id: 2,
+                    name: "Agriturismo La Collina",
+                    regione: "Toscana",
+                    citta: "Siena",
+                    telefono: "+39 0577 123456",
+                    rating: "4",
+                    source: "TripAdvisor",
+                    notes: "Ambiente familiare, prodotti a km zero, ottimo rapporto qualità-prezzo",
+                    ambiente: ["In Campagna"],
+                    tipologia: ["Agriturismo", "Rustico con Caminetto"],
+                    dateAdded: "20/04/2024"
+                }
+            ];
+        }
+
+        // Gestione dei tab
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            
+            event.target.classList.add('active');
+            
+            if (tabName === 'add') {
+                document.getElementById('addTab').classList.remove('hidden');
+            } else {
+                document.getElementById('searchTab').classList.remove('hidden');
+                displayRestaurants();
+            }
+        }
+
+        // Form submission
+        document.getElementById('restaurantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const restaurant = {
+                id: Date.now(),
+                name: document.getElementById('name').value.trim(),
+                regione: document.getElementById('regione').value,
+                citta: document.getElementById('citta').value.trim(),
+                rating: document.getElementById('rating').value,
+                source: document.getElementById('source').value,
+                notes: document.getElementById('notes').value.trim(),
+                ambiente: [],
+                tipologia: [],
+                dateAdded: new Date().toLocaleDateString('it-IT')
+            };
+
+            // Raccogli ambiente
+            ['mare', 'lago', 'montagna', 'campagna'].forEach(id => {
+                if (document.getElementById(id).checked) {
+                    restaurant.ambiente.push(document.getElementById(id).value);
+                }
+            });
+
+            // Raccogli tipologia
+            ['agriturismo', 'rustico', 'elegante', 'moderno'].forEach(id => {
+                if (document.getElementById(id).checked) {
+                    restaurant.tipologia.push(document.getElementById(id).value);
+                }
+            });
+
+            restaurants.push(restaurant);
+            
+            // Reset form
+            e.target.reset();
+            
+            // Feedback visivo
+            const btn = e.target.querySelector('.btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Aggiunto!';
+            btn.style.background = '#28a745';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        });
+
+        // Display restaurants
+        function displayRestaurants() {
+            const container = document.getElementById('restaurantsList');
+            const filteredRestaurants = filterRestaurants();
+            
+            if (filteredRestaurants.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <h3>Nessun ristorante trovato</h3>
+                        <p>Prova a modificare i filtri di ricerca</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredRestaurants.map(restaurant => `
+                <div class="restaurant-card">
+                    <div class="restaurant-header">
+                        <div class="restaurant-name">${restaurant.name}</div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            ${restaurant.rating ? `<div class="restaurant-rating">${'⭐'.repeat(restaurant.rating)}</div>` : ''}
+                            <button class="delete-btn" onclick="editRestaurant(${restaurant.id})" style="background: #28a745;">✏️</button>
+                            <button class="delete-btn" onclick="deleteRestaurant(${restaurant.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="restaurant-location">
+                        📍 ${restaurant.regione}${restaurant.citta ? `, ${restaurant.citta}` : ''}
+                        ${restaurant.telefono ? `<br>📞 <a href="tel:${restaurant.telefono}" style="color: #ff6b6b; text-decoration: none;">${restaurant.telefono}</a>` : ''}
+                    </div>
+                    <div class="restaurant-tags">
+                        ${restaurant.ambiente.map(a => `<span class="tag">${a}</span>`).join('')}
+                        ${restaurant.tipologia.map(t => `<span class="tag">${t}</span>`).join('')}
+                        ${restaurant.source ? `<span class="tag">${restaurant.source}</span>` : ''}
+                    </div>
+                    ${restaurant.notes ? `<div class="restaurant-notes">"${restaurant.notes}"</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Filter restaurants
+        function filterRestaurants() {
+            const regioneFilter = document.getElementById('filterRegione').value;
+            const ratingFilter = document.getElementById('filterRating').value;
+            const ambienteFilter = document.getElementById('filterAmbiente').value;
+            const tipologiaFilter = document.getElementById('filterTipologia').value;
+            
+            return restaurants.filter(restaurant => {
+                const matchRegione = !regioneFilter || restaurant.regione === regioneFilter;
+                const matchRating = !ratingFilter || restaurant.rating === ratingFilter;
+                const matchAmbiente = !ambienteFilter || restaurant.ambiente.includes(ambienteFilter);
+                const matchTipologia = !tipologiaFilter || restaurant.tipologia.includes(tipologiaFilter);
+                
+                return matchRegione && matchRating && matchAmbiente && matchTipologia;
+            });
+        }
+
+        // Delete restaurant
+        function deleteRestaurant(id) {
+            if (confirm('Sei sicuro di voler eliminare questo ristorante?')) {
+                restaurants = restaurants.filter(r => r.id !== id);
+                displayRestaurants();
+            }
+        }
+
+        // Event listeners per filtri
+        ['filterRegione', 'filterRating', 'filterAmbiente', 'filterTipologia'].forEach(id => {
+            document.getElementById(id).addEventListener('change', displayRestaurants);
+        });
+
+        // Inizializza con alcuni ristoranti di esempio
+        restaurants = [
+            {
+                id: 1,
+                name: "Osteria del Mare",
+                regione: "Liguria",
+                citta: "Cinque Terre",
+                rating: "5",
+                source: "Provato Personalmente",
+                notes: "Vista mozzafiato, pesce freschissimo, servizio eccellente",
+                ambiente: ["Sul Mare"],
+                tipologia: ["Elegante"],
+                dateAdded: "15/05/2024"
+            },
+            {
+                id: 2,
+                name: "Agriturismo La Collina",
+                regione: "Toscana",
+                citta: "Siena",
+                rating: "4",
+                source: "TripAdvisor",
+                notes: "Ambiente familiare, prodotti a km zero, ottimo rapporto qualità-prezzo",
+                ambiente: ["In Campagna"],
+                tipologia: ["Agriturismo", "Rustico con Caminetto"],
+                dateAdded: "20/04/2024"
+            }
+        ];
+    </script>
+</body>
+</html>
