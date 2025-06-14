@@ -146,6 +146,21 @@
             transform: translateY(-2px);
         }
 
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+        }
+
         .restaurant-card {
             background: white;
             border-radius: 15px;
@@ -248,6 +263,61 @@
             cursor: pointer;
             font-size: 12px;
         }
+
+        .backup-section {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .backup-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .backup-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .backup-status {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -260,6 +330,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('add')">Aggiungi</button>
             <button class="tab" onclick="showTab('search')">Cerca</button>
+            <button class="tab" onclick="showTab('backup')">Backup</button>
         </div>
 
         <div class="content">
@@ -445,36 +516,151 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB BACKUP -->
+            <div id="backupTab" class="tab-content hidden">
+                <div class="backup-section">
+                    <div class="backup-status" id="backupStatus">
+                        💾 Sistema di Backup Attivo
+                    </div>
+                    <p style="margin-bottom: 15px;">Proteggi i tuoi dati salvando un backup dei tuoi ristoranti</p>
+                    
+                    <div class="backup-buttons">
+                        <button class="btn btn-small btn-success" onclick="createBackup()">
+                            📥 Salva Backup
+                        </button>
+                        <button class="btn btn-small btn-secondary" onclick="document.getElementById('fileInput').click()">
+                            📤 Carica Backup
+                        </button>
+                    </div>
+                    
+                    <div class="backup-info" id="backupInfo">
+                        Ultimo backup: Mai creato
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                    <h3 style="margin-bottom: 10px;">📊 Statistiche</h3>
+                    <p><strong>Ristoranti salvati:</strong> <span id="totalRestaurants">0</span></p>
+                    <p><strong>Regioni coperte:</strong> <span id="totalRegions">0</span></p>
+                    <p><strong>Media valutazioni:</strong> <span id="averageRating">-</span></p>
+                </div>
+
+                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="loadBackup(event)">
+            </div>
         </div>
     </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
 
     <script>
         let restaurants = [];
         let editingId = null;
+        let db = null;
 
-        // Carica dati salvati
-        function loadRestaurants() {
-            const saved = window.localStorage?.getItem('myRestaurants');
-            if (saved) {
-                try {
-                    restaurants = JSON.parse(saved);
-                } catch (e) {
-                    console.log('Errore nel caricamento dei dati salvati');
-                    restaurants = getExampleRestaurants();
-                }
-            } else {
-                restaurants = getExampleRestaurants();
-            }
+        // Inizializza IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('RestaurantsDB', 1);
+                
+                request.onerror = () => {
+                    console.log('Errore apertura database, uso localStorage come fallback');
+                    resolve(null);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains('restaurants')) {
+                        const store = db.createObjectStore('restaurants', { keyPath: 'id' });
+                        store.createIndex('regione', 'regione', { unique: false });
+                        store.createIndex('rating', 'rating', { unique: false });
+                    }
+                };
+            });
         }
 
-        // Salva dati
-        function saveRestaurants() {
+        // Salva ristorante in IndexedDB
+        async function saveToDB(restaurant) {
+            if (!db) return false;
+            
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['restaurants'], 'readwrite');
+                const store = transaction.objectStore('restaurants');
+                const request = store.put(restaurant);
+                
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => resolve(false);
+            });
+        }
+
+        // Carica tutti i ristoranti da IndexedDB
+        async function loadFromDB() {
+            if (!db) return [];
+            
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['restaurants'], 'readonly');
+                const store = transaction.objectStore('restaurants');
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => resolve([]);
+            });
+        }
+
+        // Elimina ristorante da IndexedDB
+        async function deleteFromDB(id) {
+            if (!db) return false;
+            
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['restaurants'], 'readwrite');
+                const store = transaction.objectStore('restaurants');
+                const request = store.delete(id);
+                
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => resolve(false);
+            });
+        }
+
+        // Carica dati salvati (con fallback a localStorage)
+        async function loadRestaurants() {
             try {
-                if (window.localStorage) {
-                    window.localStorage.setItem('myRestaurants', JSON.stringify(restaurants));
+                restaurants = await loadFromDB();
+                if (restaurants.length === 0) {
+                    // Fallback a localStorage
+                    const saved = localStorage.getItem('myRestaurants');
+                    if (saved) {
+                        restaurants = JSON.parse(saved);
+                        // Migra i dati a IndexedDB
+                        for (const restaurant of restaurants) {
+                            await saveToDB(restaurant);
+                        }
+                    } else {
+                        restaurants = getExampleRestaurants();
+                        for (const restaurant of restaurants) {
+                            await saveToDB(restaurant);
+                        }
+                    }
                 }
             } catch (e) {
-                console.log('Impossibile salvare i dati');
+                console.log('Errore caricamento, uso dati di esempio');
+                restaurants = getExampleRestaurants();
+            }
+            updateStats();
+        }
+
+        // Salva dati (IndexedDB + localStorage backup)
+        async function saveRestaurants() {
+            try {
+                // Salva in localStorage come backup
+                localStorage.setItem('myRestaurants', JSON.stringify(restaurants));
+            } catch (e) {
+                console.log('Impossibile salvare in localStorage');
             }
         }
 
@@ -519,22 +705,25 @@
             
             if (tabName === 'add') {
                 document.getElementById('addTab').classList.remove('hidden');
-            } else {
+            } else if (tabName === 'search') {
                 document.getElementById('searchTab').classList.remove('hidden');
                 displayRestaurants();
+            } else if (tabName === 'backup') {
+                document.getElementById('backupTab').classList.remove('hidden');
+                updateStats();
             }
         }
 
         // Form submission
-        document.getElementById('restaurantForm').addEventListener('submit', function(e) {
+        document.getElementById('restaurantForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
             const restaurant = {
                 id: Date.now(),
                 name: document.getElementById('name').value.trim(),
                 regione: document.getElementById('regione').value,
                 citta: document.getElementById('citta').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
                 rating: document.getElementById('rating').value,
                 source: document.getElementById('source').value,
                 notes: document.getElementById('notes').value.trim(),
@@ -557,12 +746,17 @@
                 }
             });
 
+            // Salva in IndexedDB
+            await saveToDB(restaurant);
             restaurants.push(restaurant);
+            await saveRestaurants();
             
             // Reset form
             e.target.reset();
             
             // Feedback visivo
+            showNotification('✅ Ristorante aggiunto con successo!');
+            
             const btn = e.target.querySelector('.btn');
             const originalText = btn.textContent;
             btn.textContent = '✅ Aggiunto!';
@@ -595,7 +789,6 @@
                         <div class="restaurant-name">${restaurant.name}</div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${restaurant.rating ? `<div class="restaurant-rating">${'⭐'.repeat(restaurant.rating)}</div>` : ''}
-                            <button class="delete-btn" onclick="editRestaurant(${restaurant.id})" style="background: #28a745;">✏️</button>
                             <button class="delete-btn" onclick="deleteRestaurant(${restaurant.id})">🗑️</button>
                         </div>
                     </div>
@@ -606,70 +799,4 @@
                     <div class="restaurant-tags">
                         ${restaurant.ambiente.map(a => `<span class="tag">${a}</span>`).join('')}
                         ${restaurant.tipologia.map(t => `<span class="tag">${t}</span>`).join('')}
-                        ${restaurant.source ? `<span class="tag">${restaurant.source}</span>` : ''}
-                    </div>
-                    ${restaurant.notes ? `<div class="restaurant-notes">"${restaurant.notes}"</div>` : ''}
-                </div>
-            `).join('');
-        }
-
-        // Filter restaurants
-        function filterRestaurants() {
-            const regioneFilter = document.getElementById('filterRegione').value;
-            const ratingFilter = document.getElementById('filterRating').value;
-            const ambienteFilter = document.getElementById('filterAmbiente').value;
-            const tipologiaFilter = document.getElementById('filterTipologia').value;
-            
-            return restaurants.filter(restaurant => {
-                const matchRegione = !regioneFilter || restaurant.regione === regioneFilter;
-                const matchRating = !ratingFilter || restaurant.rating === ratingFilter;
-                const matchAmbiente = !ambienteFilter || restaurant.ambiente.includes(ambienteFilter);
-                const matchTipologia = !tipologiaFilter || restaurant.tipologia.includes(tipologiaFilter);
-                
-                return matchRegione && matchRating && matchAmbiente && matchTipologia;
-            });
-        }
-
-        // Delete restaurant
-        function deleteRestaurant(id) {
-            if (confirm('Sei sicuro di voler eliminare questo ristorante?')) {
-                restaurants = restaurants.filter(r => r.id !== id);
-                displayRestaurants();
-            }
-        }
-
-        // Event listeners per filtri
-        ['filterRegione', 'filterRating', 'filterAmbiente', 'filterTipologia'].forEach(id => {
-            document.getElementById(id).addEventListener('change', displayRestaurants);
-        });
-
-        // Inizializza con alcuni ristoranti di esempio
-        restaurants = [
-            {
-                id: 1,
-                name: "Osteria del Mare",
-                regione: "Liguria",
-                citta: "Cinque Terre",
-                rating: "5",
-                source: "Provato Personalmente",
-                notes: "Vista mozzafiato, pesce freschissimo, servizio eccellente",
-                ambiente: ["Sul Mare"],
-                tipologia: ["Elegante"],
-                dateAdded: "15/05/2024"
-            },
-            {
-                id: 2,
-                name: "Agriturismo La Collina",
-                regione: "Toscana",
-                citta: "Siena",
-                rating: "4",
-                source: "TripAdvisor",
-                notes: "Ambiente familiare, prodotti a km zero, ottimo rapporto qualità-prezzo",
-                ambiente: ["In Campagna"],
-                tipologia: ["Agriturismo", "Rustico con Caminetto"],
-                dateAdded: "20/04/2024"
-            }
-        ];
-    </script>
-</body>
-</html>
+                        ${restaurant.source ? `<span class
